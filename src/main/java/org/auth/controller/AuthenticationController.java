@@ -10,6 +10,7 @@ import org.auth.repository.UserRepository;
 import org.auth.security.jwt.JwtTokenProvider;
 import org.auth.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -55,8 +56,8 @@ public class AuthenticationController {
             String token = jwtTokenProvider.createToken(username, user.getRoles());
             Map<Object, Object> response = new HashMap<>();
             response.put("username", username);
-            response.put("token", token);
-            httpServletResponse.setHeader("token", token);
+            response.put("Authorization", "Bearer_" + token);
+            httpServletResponse.setHeader("Authorization", "Bearer_" + token);
             return ResponseEntity.ok(username);
         }catch (Exception e){
             throw new BadCredentialsException("Invalid user name or password");
@@ -64,7 +65,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("registration")
-    public ResponseEntity createNewUser(@RequestBody User user){
+    public ResponseEntity<User> createNewUser(@RequestBody User user){
         List<Role> roles = new ArrayList<>();
         Role role = roleRepository.findById(1L)
                 .orElseThrow(NotFoundException::new);
@@ -74,6 +75,6 @@ public class AuthenticationController {
         user.setStatus(Status.ACTIVE);
         user.setRoles(roles);
         userRepository.save(user);
-        return ResponseEntity.ok(user);
+        return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 }
